@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  shellcheck:
-    name: shellcheck
+  ci-bash:
+    name: ci-bash
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,12 +23,4 @@ jobs:
 
       - name: Shellcheck on *.sh
         run: |
-          set -euo pipefail
-          mapfile -t sh_files < <(git ls-files '*.sh')
-          if [ ${#sh_files[@]} -eq 0 ]; then
-            echo "No shell scripts to check"
-            exit 0
-          fi
-          echo "Shell scripts: ${sh_files[*]}"
-          shellcheck --version
-          shellcheck --severity=warning --format=gcc "${sh_files[@]}"
+          find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -r shellcheck

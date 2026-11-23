@@ -2,7 +2,8 @@ on:
   push:
     branches:
       - main
-    pull_request:
+  pull_request:
+    branches:
       - main
 
 permissions:
@@ -33,7 +34,7 @@ jobs:
 
       - name: Check required text exist
         run: |
-          grep -q "Hello from CD lab" index.html /
+          grep -q "Hello from CD lab" index.html \
             || (echo "Required text not found" && exit 1)
           echo "Required text exists"
 
@@ -59,4 +60,4 @@ jobs:
 
       - name: Deploy to GitHub Pages
         id: deployment
-        actions: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4

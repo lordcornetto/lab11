@@ -2,9 +2,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - '**.html'
   pull_request:
     branches:
       - main
+    paths:
+      - '**.html'
 
 permissions:
   contents: read
@@ -30,7 +34,14 @@ jobs:
 
       - name: Validate HTML using HTMLHint
         run: |
-          npx --yes htmlhint@1 "**/*.html"
+          set -euo pipefail
+          mapfile -t html_files < <(git ls-files '*.html')
+          if [ ${#html_files[@]} -eq 0 ]; then
+            echo "No HTML files to check"
+            exit 0
+          fi
+          echo "HTML files: ${html_files[*]}"
+          npx --yes htmlhint@1 "${html_files[@]}"
 
       - name: Check required text exist
         run: |

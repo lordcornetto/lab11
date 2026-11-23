@@ -1,0 +1,62 @@
+on:
+  push:
+    branches:
+      - main
+    pull_request:
+      - main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: ci-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check files required exist
+        run: |
+          test -f index.html || (echo "index.html missing" && exit 1)
+          echo "index.html found"
+
+      - name: Validate HTML using HTMLHint
+        run: |
+          npx --yes htmlhint@1 "**/*.html"
+
+      - name: Check required text exist
+        run: |
+          grep -q "Hello from CD lab" index.html /
+            || (echo "Required text not found" && exit 1)
+          echo "Required text exists"
+
+  cd:
+    name: cd-deploy
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        actions: actions/deploy-pages@v4
